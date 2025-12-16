@@ -1,210 +1,269 @@
 QUESTIONS = [
-    # A. BUSINESS OVERVIEW (Non-scoring but captured)
+    # -----------------------------
+    # 1. Prioritization, Budget & Timeline
+    # -----------------------------
     {
-        "id": "A1",
-        "section": "Business Overview",
-        "label": "What industry does your organization operate in?",
-        "type": "text"
+        "id": "Q1",
+        "section": "Prioritization, Budget & Timeline",
+        "label": "How important is AI adoption for your business in the next 12 months?",
+        "type": "single_choice",
+        "options": [
+            "No clear interest",
+            "Exploring but unsure",
+            "Some interest with initial discussions",
+            "Actively planning AI initiatives",
+            "AI adoption is a top strategic priority"
+        ],
     },
     {
-        "id": "A2",
-        "section": "Business Overview",
-        "label": "What are your top 3 business priorities for the next 12 months?",
-        "type": "text"
+        "id": "Q2",
+        "section": "Prioritization, Budget & Timeline",
+        "label": "What is your organization’s available budget for AI initiatives?",
+        "type": "single_choice",
+        "options": [
+            "No dedicated budget",
+            "Small experimental budget",
+            "Moderate budget with approvals",
+            "Budget allocated for multiple pilots",
+            "Strong budget commitment for scaling AI"
+        ],
     },
     {
-        "id": "A3",
-        "section": "Business Overview",
-        "label": "What operational challenges are you looking to solve?",
-        "type": "text"
-    },
-    {
-        "id": "A4",
-        "section": "Business Overview",
-        "label": "How large is your user/customer base?",
-        "type": "text"
+        "id": "Q3",
+        "section": "Prioritization, Budget & Timeline",
+        "label": "Timeline for starting your first AI project?",
+        "type": "single_choice",
+        "options": [
+            "No timeline / not planned",
+            "6–12 months",
+            "3–6 months",
+            "Within 1–3 months",
+            "Immediate (ready to begin)"
+        ],
     },
 
-    # B. DATA FOUNDATION READINESS
+    # -----------------------------
+    # 2. Technical, Data & Cloud Readiness
+    # -----------------------------
     {
-        "id": "B1",
-        "section": "Data Foundation Readiness",
-        "label": "Where does your data primarily reside?",
-        "type": "multi_choice",
-        "options": ["Databases", "Cloud storage", "Spreadsheets", "Legacy apps"],
-        "dimension": "data",
-        "weight": 1.0
-    },
-    {
-        "id": "B2",
-        "section": "Data Foundation Readiness",
-        "label": "How structured is your data?",
+        "id": "Q4",
+        "section": "Technical, Data & Cloud Readiness",
+        "label": "How mature is your current data infrastructure?",
         "type": "single_choice",
-        "options": ["Fully structured", "Partially structured", "Mostly unstructured"],
-        "dimension": "data",
-        "weight": 1.0
+        "options": [
+            "Scattered spreadsheets / unstructured data",
+            "Basic databases but low standardization",
+            "Some central repositories (CRM/ERP)",
+            "Well-structured, accessible datasets",
+            "Mature data warehouse / lake with governance"
+        ],
     },
     {
-        "id": "B3",
-        "section": "Data Foundation Readiness",
-        "label": "Do you have a centralized data warehouse or lake?",
+        "id": "Q5",
+        "section": "Technical, Data & Cloud Readiness",
+        "label": "How clean and usable is your data for AI models?",
         "type": "single_choice",
-        "options": ["Yes", "No", "Planning"],
-        "dimension": "data",
-        "weight": 1.0
+        "options": [
+            "Highly inconsistent / incomplete",
+            "Needs major cleaning",
+            "Moderate consistency",
+            "Mostly clean and reliable",
+            "High-quality, validated, AI-ready data"
+        ],
     },
     {
-        "id": "B4",
-        "section": "Data Foundation Readiness",
-        "label": "How confident are you in your data quality and accuracy?",
-        "type": "rating",
-        "dimension": "data",
-        "weight": 2.0
-    },
-    {
-        "id": "B5",
-        "section": "Data Foundation Readiness",
-        "label": "Do your teams currently use BI dashboards or analytics tools?",
-        "type": "rating",
-        "dimension": "adoption",
-        "weight": 1.5
+        "id": "Q6",
+        "section": "Technical, Data & Cloud Readiness",
+        "label": "How ready is your cloud infrastructure for AI workloads?",
+        "type": "single_choice",
+        "options": [
+            "Completely on-prem with no cloud",
+            "Limited cloud adoption",
+            "Hybrid cloud with basic readiness",
+            "Strong cloud integration",
+            "Fully cloud-native & optimized for AI"
+        ],
     },
 
-    # C. AUTOMATION & PROCESS MATURITY
+    # -----------------------------
+    # 3. Service Mapping & Pain Points
+    # -----------------------------
     {
-        "id": "C1",
-        "section": "Automation & Process Maturity",
-        "label": "What percentage of your workflows are still manual?",
-        "type": "rating",
-        "dimension": "adoption",
-        "weight": 2.0,
-        "invert": True
-    },
-    {
-        "id": "C2",
-        "section": "Automation & Process Maturity",
-        "label": "Have you implemented RPA or any automation tools?",
+        "id": "Q7",
+        "section": "Service Mapping & Pain Points",
+        "label": "How well have you identified key business problems where AI can help?",
         "type": "single_choice",
-        "options": ["Yes", "No", "Pilot / Limited"],
-        "dimension": "adoption",
-        "weight": 1.5
+        "options": [
+            "No clarity",
+            "Only broad ideas",
+            "Some mapped pain points",
+            "Clear problems identified",
+            "Fully defined AI use cases"
+        ],
     },
     {
-        "id": "C3",
-        "section": "Automation & Process Maturity",
-        "label": "Where do delays or errors occur frequently?",
-        "type": "text"
+        "id": "Q8",
+        "section": "Service Mapping & Pain Points",
+        "label": "How urgent are the business challenges that AI can solve?",
+        "type": "single_choice",
+        "options": [
+            "No urgency",
+            "Low urgency",
+            "Moderate impact challenges",
+            "High-impact challenges",
+            "Critical challenges needing immediate AI intervention"
+        ],
     },
     {
-        "id": "C4",
+        "id": "Q9",
+        "section": "Service Mapping & Pain Points",
+        "label": "How aligned are your internal teams on AI adoption?",
+        "type": "single_choice",
+        "options": [
+            "No alignment",
+            "Minimal alignment",
+            "Partial alignment",
+            "Good alignment across teams",
+            "Full organizational alignment"
+        ],
+    },
+
+    # -----------------------------
+    # 4. Automation & Process Maturity
+    # -----------------------------
+    {
+        "id": "Q10",
         "section": "Automation & Process Maturity",
+        "label": "What is your current automation level in business processes?",
+        "type": "single_choice",
+        "options": [
+            "Mostly manual",
+            "Few automated processes",
+            "Some automation but inconsistent",
+            "Well-automated key processes",
+            "Highly automated with workflows & tools"
+        ],
+    },
+    {
+        "id": "Q11",
+        "section": "Automation & Process Maturity",
+        "label": "How standardized are your internal processes?",
+        "type": "single_choice",
+        "options": [
+            "No standardization",
+            "Minimal standard SOPs",
+            "Partially standardized",
+            "Mostly standardized",
+            "Fully standardized & measurable"
+        ],
+    },
+    {
+        "id": "Q12",
+        "section": "Automation & Process Maturity",
+        "label": "How comfortable is your workforce with automation tools?",
+        "type": "single_choice",
+        "options": [
+            "No experience",
+            "Very limited experience",
+            "Some experience with guidance",
+            "Good comfort level",
+            "Highly skilled & automation-friendly"
+        ],
+    },
+
+    # -----------------------------
+    # 5. Client Business Overview
+    # -----------------------------
+    {
+        "id": "Q13",
+        "section": "Client Business Overview",
+        "label": "How stable and scalable is your business model for AI?",
+        "type": "single_choice",
+        "options": [
+            "Unstable / early stage",
+            "Evolving without clarity",
+            "Moderately stable",
+            "Strong foundation",
+            "Highly scalable and AI-ready"
+        ],
+    },
+    {
+        "id": "Q14",
+        "section": "Client Business Overview",
+        "label": "What is leadership commitment towards AI?",
+        "type": "single_choice",
+        "options": [
+            "No leadership backing",
+            "Very limited backing",
+            "Moderate interest",
+            "Good support",
+            "Strong leadership commitment"
+        ],
+    },
+    {
+        "id": "Q15",
+        "section": "Client Business Overview",
+        "label": "How prepared are you to adopt changes brought by AI?",
+        "type": "single_choice",
+        "options": [
+            "Very resistant",
+            "Some resistance",
+            "Neutral / open",
+            "Open with strong interest",
+            "Fully adaptable & ready for change"
+        ],
+    },
+
+    # -----------------------------
+    # Additional Details
+    # -----------------------------
+    {
+        "id": "AUTOMATION_AREAS",
+        "section": "Additional Details",
         "label": "Which areas are you looking to automate?",
         "type": "multi_choice",
-        "options": ["Finance", "HR", "Operations", "Customer Support", "IT processes"],
-        "dimension": "business_fit",
-        "weight": 1.0
-    },
-    {
-        "id": "C5",
-        "section": "Automation & Process Maturity",
-        "label": "Are your workflows documented and standardized?",
-        "type": "rating",
-        "dimension": "workforce",
-        "weight": 1.5
-    },
-
-    # D. APPLICATION & CLOUD READINESS
-    {
-        "id": "D1",
-        "section": "Application & Cloud Readiness",
-        "label": "What is your current application environment?",
-        "type": "single_choice",
-        "options": ["On-prem", "Cloud", "Hybrid"],
-        "dimension": "adoption",
-        "weight": 1.0
-    },
-    {
-        "id": "D2",
-        "section": "Application & Cloud Readiness",
-        "label": "Are your applications API-enabled for integration?",
-        "type": "rating",
-        "dimension": "adoption",
-        "weight": 1.5
-    },
-    {
-        "id": "D3",
-        "section": "Application & Cloud Readiness",
-        "label": "Do you face issues with speed, scale, or performance?",
-        "type": "rating",
-        "dimension": "business_fit",
-        "weight": 1.5
-    },
-    {
-        "id": "D4",
-        "section": "Application & Cloud Readiness",
-        "label": "What modernization initiatives have you planned or started?",
-        "type": "text"
-    },
-    {
-        "id": "D5",
-        "section": "Application & Cloud Readiness",
-        "label": "Do you already use services like Azure AI, AWS AI, or GCP AI?",
-        "type": "single_choice",
-        "options": ["Yes", "No", "Experimenting"],
-        "dimension": "leadership",
-        "weight": 1.0
-    },
-
-    # E. AI OPPORTUNITY & READINESS
-    {
-        "id": "E1",
-        "section": "AI Opportunity & Readiness",
-        "label": "Have you implemented any AI/ML models previously?",
-        "type": "single_choice",
-        "options": ["Yes", "No", "Pilot / POC"],
-        "dimension": "adoption",
-        "weight": 1.5
-    },
-    {
-        "id": "E2",
-        "section": "AI Opportunity & Readiness",
-        "label": "Which areas do you believe AI can impact most?",
-        "type": "multi_choice",
         "options": [
-            "Customer service", "Predictive maintenance", "Sales & marketing",
-            "Fraud detection", "Personalization", "Operations", "IT service management"
+            "Finance",
+            "HR",
+            "Operations",
+            "Customer Support",
+            "IT Processes",
+            "Sales & Marketing",
+            "Procurement / Supply Chain",
+            "Legal / Compliance",
+            "Other"
         ],
-        "dimension": "business_fit",
-        "weight": 1.0
     },
     {
-        "id": "E3",
-        "section": "AI Opportunity & Readiness",
-        "label": "What type of AI use cases are you interested in?",
-        "type": "multi_choice",
+        "id": "INDUSTRY",
+        "section": "Additional Details",
+        "label": "Which Industry Defines you better?",
+        "type": "single_choice",
         "options": [
-            "Generative AI", "Predictive analytics", "Recommendation engines",
-            "Chatbots / Virtual agents", "Document processing"
+            "Banking & Financial Services",
+            "Insurance",
+            "Healthcare & HealthTech",
+            "Pharma / Med Devices",
+            "Technology / IT Services",
+            "Media / Entertainment / Telecom",
+            "Retail & E-commerce",
+            "Manufacturing",
+            "Transport & Logistics",
+            "Energy & Utilities",
+            "Construction",
+            "Real Estate",
+            "Hospitality",
+            "Food & Beverages",
+            "Education / EdTech",
+            "On-Demand Platforms",
+            "Professional Services",
+            "Government / Public Sector",
         ],
-        "dimension": "business_fit",
-        "weight": 1.0
     },
     {
-        "id": "E4",
-        "section": "AI Opportunity & Readiness",
-        "label": "What is your internal AI skill availability?",
-        "type": "single_choice",
-        "options": ["Strong team", "Basic knowledge", "Exploring", "None"],
-        "dimension": "workforce",
-        "weight": 2.0
+        "id": "USE_CASE",
+        "section": "Additional Details",
+        "label": "Which AI use case would you like to prioritize?",
+        "type": "text",
     },
-    {
-        "id": "E5",
-        "section": "AI Opportunity & Readiness",
-        "label": "How urgent is your AI initiative?",
-        "type": "single_choice",
-        "options": ["Immediate", "Within 3 months", "Within 6–12 months", "Just exploring"],
-        "dimension": "leadership",
-        "weight": 1.5
-    }
 ]

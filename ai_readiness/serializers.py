@@ -1,91 +1,191 @@
+import os
 from rest_framework import serializers
+from django.conf import settings
+
 from .models import Assessment, Answer
 from .questions_config import QUESTIONS
-from .scoring import compute_dimension_scores, compute_overall_score
-from .feedback import generate_feedback
+from .pdf_report import generate_pdf_report
+from .scoring import (
+    compute_raw_percentage_from_numeric_scores,
+    apply_capping,
+    get_category,
+)
+from .feedback import generate_narrative
 
 
-
-# index config for fast lookup
+# Fast lookup
 QUESTION_INDEX = {q["id"]: q for q in QUESTIONS}
+RATED_QUESTIONS = [f"Q{i}" for i in range(1, 16)]
 
 
 class AssessmentCreateSerializer(serializers.Serializer):
+    # -----------------------------
+    # Contact Details
+    # -----------------------------
+    person_name = serializers.CharField(required=False, allow_blank=True)
+    company_name = serializers.CharField(required=False, allow_blank=True)
     email = serializers.EmailField()
-    answers = serializers.DictField()  # {"A1": "...", "B4": 7, ...}
+    phone = serializers.CharField(required=False, allow_blank=True)
+    designation = serializers.CharField(required=False, allow_blank=True)
 
+    # -----------------------------
+    # Business Info
+    # -----------------------------
+    industry = serializers.CharField(required=False, allow_blank=True)
+    prioritized_use_case = serializers.CharField(required=False, allow_blank=True)
+    automation_areas = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
+    automation_areas_other = serializers.CharField(required=False, allow_blank=True)
+
+    # -----------------------------
+    # Answers Payload
+    # -----------------------------
+    answers = serializers.DictField()
+
+    # -----------------------------
+    # Validation
+    # -----------------------------
     def validate(self, data):
         answers = data.get("answers", {})
-        if not answers:
-            raise serializers.ValidationError("Answers field cannot be empty")
 
-        # validate every answer against config rules
-        for qid, value in answers.items():
-            if qid not in QUESTION_INDEX:
-                raise serializers.ValidationError(f"Invalid question ID: {qid}")
+        # Ensure all rated questions exist
+        missing = [q for q in RATED_QUESTIONS if q not in answers]
+        if missing:
+            raise serializers.ValidationError(
+                {"answers": f"Missing required questions: {missing}"}
+            )
 
-            q = QUESTION_INDEX[qid]
-            q_type = q.get("type")
+        # Validate rated questions (single choice 1–5 mapped via options)
+        for qid in RATED_QUESTIONS:
+            config = QUESTION_INDEX.get(qid)
+            if not config:
+                raise serializers.ValidationError({qid: "Invalid question ID"})
 
-            # Validate based on type
-            if q_type == "rating":
-                if not isinstance(value, (int, float)):
-                    raise serializers.ValidationError(f"{qid} must be a number between 1 and 10")
-                if value < 1 or value > 10:
-                    raise serializers.ValidationError(f"{qid} must be between 1–10")
-
-            elif q_type == "single_choice":
-                if value not in q["options"]:
-                    raise serializers.ValidationError(f"{qid} must be one of: {q['options']}")
-
-            elif q_type == "multi_choice":
-                if not isinstance(value, list):
-                    raise serializers.ValidationError(f"{qid} must be a list of options")
-                for item in value:
-                    if item not in q["options"]:
-                        raise serializers.ValidationError(f"{qid} contains invalid option: {item}")
-
-            # text type has no restrictions
+            if answers[qid] not in config["options"]:
+                raise serializers.ValidationError(
+                    {qid: f"Invalid option. Allowed: {config['options']}"}
+                )
 
         return data
 
-
+    # -----------------------------
+    # Create Assessment
+    # -----------------------------
     def create(self, validated_data):
-        email = validated_data["email"]
         answers = validated_data["answers"]
 
-        # 1️⃣ Create Assessment row first (email only)
-        assessment = Assessment.objects.create(email=email)
+        # Create Assessment
+        assessment = Assessment.objects.create(
+            person_name=validated_data.get("person_name"),
+            company_name=validated_data.get("company_name"),
+            email=validated_data["email"],
+            phone=validated_data.get("phone"),
+            designation=validated_data.get("designation"),
+            industry=validated_data.get("industry") or answers.get("INDUSTRY"),
+            prioritized_use_case=validated_data.get("prioritized_use_case")
+            or answers.get("USE_CASE"),
+            automation_areas=validated_data.get("automation_areas")
+            or answers.get("AUTOMATION_AREAS"),
+            automation_areas_other=validated_data.get("automation_areas_other"),
+        )
 
-        # 2️⃣ Create Answer rows (store every question)
-        for qid, value in answers.items():
-            q = QUESTION_INDEX[qid]
+        # -----------------------------
+        # Save Answers + Numeric Scores
+        # -----------------------------
+        numeric_scores = {}
+
+        for qid in RATED_QUESTIONS:
+            config = QUESTION_INDEX[qid]
+            selected_option = answers[qid]
+
+            # Map option → numeric score (1–5)
+            numeric_value = config["options"].index(selected_option) + 1
+
             Answer.objects.create(
                 assessment=assessment,
                 question_id=qid,
-                section=q["section"],
-                question_text=q["label"],
-                answer_type=q["type"],
+                question_text=config["label"],
+                numeric_value=numeric_value,
+                raw_value=selected_option,
+            )
+
+            numeric_scores[qid] = numeric_value
+
+        # Save non-scored answers (traceability)
+        for qid, value in answers.items():
+            if qid in RATED_QUESTIONS:
+                continue
+
+            qmeta = QUESTION_INDEX.get(qid)
+            Answer.objects.create(
+                assessment=assessment,
+                question_id=qid,
+                question_text=qmeta["label"] if qmeta else qid,
                 raw_value=value,
             )
 
-        # 3️⃣ Calculate scores by dimensions
-        dim_scores = compute_dimension_scores(answers)
+        # -----------------------------
+        # Scoring Logic
+        # -----------------------------
+        raw_pct = compute_raw_percentage_from_numeric_scores(numeric_scores)
+        capped_pct = apply_capping(raw_pct)
+        category = get_category(capped_pct)
+        narrative = generate_narrative(assessment, raw_pct, capped_pct)
 
-        # 4️⃣ Total score & category
-        overall = compute_overall_score(dim_scores)
-
-        # 5️⃣ Generate feedback text & recommendations
-        feedback = generate_feedback(dim_scores, overall)
-
-        # 6️⃣ Save scores + feedback in Assessment record
-        assessment.overall_score = overall
-        assessment.category = feedback["category"]
-        assessment.dimension_scores = dim_scores
-        assessment.feedback_summary = feedback["summary"]
-        assessment.feedback_profile = feedback["profile"]
-        assessment.feedback_category_detail = feedback["category_detail"]
-        assessment.feedback_recommended_actions = feedback["recommended_actions"]
+        assessment.raw_score = raw_pct
+        assessment.capped_score = capped_pct
+        assessment.category = category
+        assessment.narrative = narrative
         assessment.save()
 
+        # -----------------------------
+        # AUTO-GENERATE PDF (🔥 KEY FIX)
+        # -----------------------------
+        # reports_dir = os.path.join(settings.MEDIA_ROOT, "reports")
+        # os.makedirs(reports_dir, exist_ok=True)
+
+        # filename = f"{assessment.id}.pdf"
+        # pdf_path = os.path.join(reports_dir, filename)
+
+        # generate_pdf_report(assessment, pdf_path)
+
+        # assessment.pdf_report_path = f"{settings.MEDIA_URL}reports/{filename}"
+        # assessment.save(update_fields=["pdf_report_path"])
+
         return assessment
+
+
+# -----------------------------
+# Read-Only Serializers
+# -----------------------------
+class AnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Answer
+        fields = ["question_id", "question_text", "numeric_value", "raw_value"]
+
+
+class AssessmentDetailSerializer(serializers.ModelSerializer):
+    answers = AnswerSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Assessment
+        fields = [
+            "id",
+            "person_name",
+            "company_name",
+            "email",
+            "phone",
+            "designation",
+            "industry",
+            "prioritized_use_case",
+            "automation_areas",
+            "automation_areas_other",
+            "raw_score",
+            "capped_score",
+            "category",
+            "narrative",
+            "pdf_report_path",
+            "created_at",
+            "answers",
+        ]

@@ -1,44 +1,76 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status, generics
+from django.http import FileResponse, Http404
 from .questions_config import QUESTIONS
-from rest_framework import status
-from .serializers import AssessmentCreateSerializer, QUESTION_INDEX
+from .serializers import AssessmentCreateSerializer, AssessmentDetailSerializer
+from .models import Assessment
+from .pdf_report import generate_pdf_report
+import os
+import io
+from django.conf import settings
 
 
 class QuestionsView(APIView):
-    """
-    GET /api/ai-readiness/questions/
-    Returns questions for dynamic form rendering.
-    """
-
     def get(self, request):
         return Response({"questions": QUESTIONS})
 
 
 class SubmitAssessmentView(APIView):
-    """
-    POST /api/ai-readiness/submit/
-    Save answers + return scoring & feedback
-    """
-
     def post(self, request):
         serializer = AssessmentCreateSerializer(data=request.data)
         if serializer.is_valid():
             assessment = serializer.save()
-
-            return Response(
-                {
-                    "assessment_id": str(assessment.id),
-                    "email": assessment.email,
-                    "overall_score": assessment.overall_score,
-                    "category": assessment.category,
-                    "dimension_scores": assessment.dimension_scores,
-                    "feedback_summary": assessment.feedback_summary,
-                    "feedback_profile": assessment.feedback_profile,
-                    "feedback_category_detail": assessment.feedback_category_detail,
-                    "recommended_actions": assessment.feedback_recommended_actions,
-                },
-                status=status.HTTP_201_CREATED,
-            )
-
+            out = AssessmentDetailSerializer(assessment)
+            return Response(out.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AssessmentDetailView(generics.RetrieveAPIView):
+    queryset = Assessment.objects.all()
+    serializer_class = AssessmentDetailSerializer
+    lookup_field = "id"
+
+
+# class PDFReportView(APIView):
+#     def get(self, request, id):
+#         try:
+#             assessment = Assessment.objects.get(id=id)
+#         except Assessment.DoesNotExist:
+#             raise Http404("Assessment not found")
+
+#         if not assessment.pdf_report_path:
+#             raise Http404("PDF not available")
+
+#         pdf_path = os.path.join(
+#             settings.MEDIA_ROOT,
+#             assessment.pdf_report_path.replace(
+#                 settings.MEDIA_URL, "").lstrip("/")
+#         )
+
+#         return FileResponse(
+#             open(pdf_path, "rb"),
+#             content_type="application/pdf",
+#             filename=f"{assessment.id}.pdf",
+#         )
+
+class PDFReportView(APIView):
+    def get(self, request, id):
+        try:
+            assessment = Assessment.objects.get(id=id)
+        except Assessment.DoesNotExist:
+            raise Http404("Assessment not found")
+
+        # Request-level cache
+        if not hasattr(request, "_cached_pdf"):
+            buffer = io.BytesIO()
+            generate_pdf_report(assessment, buffer)
+            buffer.seek(0)
+            request._cached_pdf = buffer
+
+        return FileResponse(
+            request._cached_pdf,
+            as_attachment=True,
+            filename=f"AI_Readiness_Report_{assessment.id}.pdf",
+            content_type="application/pdf",
+        )
