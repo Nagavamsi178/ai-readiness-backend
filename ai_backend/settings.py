@@ -29,6 +29,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "ai-readiness-backend-tbq1.onrender.com",
+    "ai-readiness-backend-2-s8go.onrender.com",
     "localhost",
     "127.0.0.1",
 ]
