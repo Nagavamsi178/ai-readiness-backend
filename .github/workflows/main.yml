@@ -1,4 +1,4 @@
-name: RAG Application CI
+name: AI-READINESS-BACKEND
 
 on:
   push:
@@ -25,12 +25,7 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements.txt
 
-      - name: Validate imports
+      - name: Django system check
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
-          python -c "import auth, config, rag, security, storage, utils"
-
-      - name: Validate main
-        run: |
-          export PYTHONPATH=$PYTHONPATH:$(pwd)
-          python -c "import main"
+          python manage.py check
